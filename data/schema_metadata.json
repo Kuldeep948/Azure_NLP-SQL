@@ -1,0 +1,120 @@
+{
+  "tables": {
+    "customers": {
+      "name": "customers",
+      "description": "Customer master data with segmentation and regional attributes",
+      "columns": [
+        {"name": "customer_id", "data_type": "INT", "nullable": false, "description": "Unique customer identifier (primary key)"},
+        {"name": "first_name", "data_type": "NVARCHAR(100)", "nullable": false, "description": "Customer first name"},
+        {"name": "last_name", "data_type": "NVARCHAR(100)", "nullable": false, "description": "Customer last name"},
+        {"name": "email", "data_type": "NVARCHAR(255)", "nullable": false, "description": "Customer email address (unique)"},
+        {"name": "phone", "data_type": "NVARCHAR(20)", "nullable": true, "description": "Customer phone number"},
+        {"name": "segment", "data_type": "NVARCHAR(50)", "nullable": true, "description": "Customer segment classification (e.g., Enterprise, SMB, Consumer)"},
+        {"name": "region", "data_type": "NVARCHAR(100)", "nullable": true, "description": "Geographic region of the customer"},
+        {"name": "created_at", "data_type": "DATETIME2", "nullable": true, "description": "Timestamp when customer record was created"}
+      ],
+      "primary_keys": ["customer_id"],
+      "foreign_keys": []
+    },
+    "orders": {
+      "name": "orders",
+      "description": "Sales order headers with status tracking and channel attribution",
+      "columns": [
+        {"name": "order_id", "data_type": "INT", "nullable": false, "description": "Unique order identifier (primary key)"},
+        {"name": "customer_id", "data_type": "INT", "nullable": false, "description": "Foreign key to customers table"},
+        {"name": "order_date", "data_type": "DATETIME2", "nullable": true, "description": "Date and time when the order was placed"},
+        {"name": "status", "data_type": "NVARCHAR(20)", "nullable": true, "description": "Order status (e.g., pending, shipped, delivered, cancelled)"},
+        {"name": "total_amount", "data_type": "DECIMAL(12,2)", "nullable": true, "description": "Total monetary value of the order"},
+        {"name": "discount", "data_type": "DECIMAL(10,2)", "nullable": true, "description": "Discount amount applied to the order"},
+        {"name": "channel", "data_type": "NVARCHAR(50)", "nullable": true, "description": "Sales channel through which the order was placed (e.g., web, mobile, in-store)"}
+      ],
+      "primary_keys": ["order_id"],
+      "foreign_keys": [
+        {"column": "customer_id", "references_table": "customers", "references_column": "customer_id"}
+      ]
+    },
+    "order_items": {
+      "name": "order_items",
+      "description": "Individual line items within an order linking products to orders with quantities and pricing",
+      "columns": [
+        {"name": "item_id", "data_type": "INT", "nullable": false, "description": "Unique line item identifier (primary key)"},
+        {"name": "order_id", "data_type": "INT", "nullable": false, "description": "Foreign key to orders table"},
+        {"name": "product_id", "data_type": "INT", "nullable": false, "description": "Foreign key to products table"},
+        {"name": "quantity", "data_type": "INT", "nullable": false, "description": "Number of units ordered"},
+        {"name": "unit_price", "data_type": "DECIMAL(10,2)", "nullable": false, "description": "Price per unit at time of purchase"},
+        {"name": "line_total", "data_type": "DECIMAL(12,2)", "nullable": true, "description": "Computed total for this line item (quantity * unit_price)"}
+      ],
+      "primary_keys": ["item_id"],
+      "foreign_keys": [
+        {"column": "order_id", "references_table": "orders", "references_column": "order_id"},
+        {"column": "product_id", "references_table": "products", "references_column": "product_id"}
+      ]
+    },
+    "products": {
+      "name": "products",
+      "description": "Product catalog with categorization, branding, and pricing information",
+      "columns": [
+        {"name": "product_id", "data_type": "INT", "nullable": false, "description": "Unique product identifier (primary key)"},
+        {"name": "name", "data_type": "NVARCHAR(200)", "nullable": false, "description": "Product display name"},
+        {"name": "category", "data_type": "NVARCHAR(100)", "nullable": true, "description": "Top-level product category"},
+        {"name": "sub_category", "data_type": "NVARCHAR(100)", "nullable": true, "description": "Product sub-category for finer classification"},
+        {"name": "brand", "data_type": "NVARCHAR(100)", "nullable": true, "description": "Brand or manufacturer name"},
+        {"name": "cost_price", "data_type": "DECIMAL(10,2)", "nullable": true, "description": "Internal cost price (wholesale/manufacturing cost)"},
+        {"name": "list_price", "data_type": "DECIMAL(10,2)", "nullable": false, "description": "Retail list price shown to customers"}
+      ],
+      "primary_keys": ["product_id"],
+      "foreign_keys": []
+    },
+    "campaigns": {
+      "name": "campaigns",
+      "description": "Marketing campaigns with budget allocation, channel targeting, and date ranges",
+      "columns": [
+        {"name": "campaign_id", "data_type": "INT", "nullable": false, "description": "Unique campaign identifier (primary key)"},
+        {"name": "name", "data_type": "NVARCHAR(200)", "nullable": false, "description": "Campaign display name"},
+        {"name": "channel", "data_type": "NVARCHAR(50)", "nullable": true, "description": "Marketing channel (e.g., email, social, search, display)"},
+        {"name": "start_date", "data_type": "DATE", "nullable": false, "description": "Campaign start date"},
+        {"name": "end_date", "data_type": "DATE", "nullable": true, "description": "Campaign end date (null if ongoing)"},
+        {"name": "budget", "data_type": "DECIMAL(12,2)", "nullable": true, "description": "Total allocated budget for the campaign"},
+        {"name": "spend", "data_type": "DECIMAL(12,2)", "nullable": true, "description": "Actual spend to date"}
+      ],
+      "primary_keys": ["campaign_id"],
+      "foreign_keys": []
+    },
+    "campaign_conversions": {
+      "name": "campaign_conversions",
+      "description": "Conversion events linking campaigns to customers and orders for attribution tracking",
+      "columns": [
+        {"name": "conversion_id", "data_type": "INT", "nullable": false, "description": "Unique conversion event identifier (primary key)"},
+        {"name": "campaign_id", "data_type": "INT", "nullable": false, "description": "Foreign key to campaigns table"},
+        {"name": "customer_id", "data_type": "INT", "nullable": false, "description": "Foreign key to customers table"},
+        {"name": "order_id", "data_type": "INT", "nullable": true, "description": "Foreign key to orders table (null if conversion did not result in order)"},
+        {"name": "conversion_date", "data_type": "DATETIME2", "nullable": true, "description": "Date and time when the conversion occurred"}
+      ],
+      "primary_keys": ["conversion_id"],
+      "foreign_keys": [
+        {"column": "campaign_id", "references_table": "campaigns", "references_column": "campaign_id"},
+        {"column": "customer_id", "references_table": "customers", "references_column": "customer_id"},
+        {"column": "order_id", "references_table": "orders", "references_column": "order_id"}
+      ]
+    },
+    "support_tickets": {
+      "name": "support_tickets",
+      "description": "Customer support tickets with priority, categorization, and resolution tracking",
+      "columns": [
+        {"name": "ticket_id", "data_type": "INT", "nullable": false, "description": "Unique ticket identifier (primary key)"},
+        {"name": "customer_id", "data_type": "INT", "nullable": false, "description": "Foreign key to customers table"},
+        {"name": "order_id", "data_type": "INT", "nullable": true, "description": "Foreign key to related order (null if not order-related)"},
+        {"name": "category", "data_type": "NVARCHAR(100)", "nullable": true, "description": "Ticket category (e.g., billing, shipping, product, technical)"},
+        {"name": "priority", "data_type": "NVARCHAR(10)", "nullable": true, "description": "Ticket priority level (low, medium, high, critical)"},
+        {"name": "status", "data_type": "NVARCHAR(20)", "nullable": true, "description": "Ticket status (open, in_progress, resolved, closed)"},
+        {"name": "created_at", "data_type": "DATETIME2", "nullable": true, "description": "Timestamp when ticket was created"},
+        {"name": "resolved_at", "data_type": "DATETIME2", "nullable": true, "description": "Timestamp when ticket was resolved (null if still open)"}
+      ],
+      "primary_keys": ["ticket_id"],
+      "foreign_keys": [
+        {"column": "customer_id", "references_table": "customers", "references_column": "customer_id"},
+        {"column": "order_id", "references_table": "orders", "references_column": "order_id"}
+      ]
+    }
+  }
+}

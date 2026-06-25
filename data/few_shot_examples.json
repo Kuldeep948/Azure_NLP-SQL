@@ -1,0 +1,82 @@
+[
+  {
+    "nl_query": "How many customers do we have?",
+    "sql": "SELECT COUNT(*) AS customer_count FROM customers"
+  },
+  {
+    "nl_query": "List all products in the Electronics category",
+    "sql": "SELECT product_id, name, brand, list_price FROM products WHERE category = 'Electronics'"
+  },
+  {
+    "nl_query": "Show me the top 10 most expensive products",
+    "sql": "SELECT TOP 10 product_id, name, category, list_price FROM products ORDER BY list_price DESC"
+  },
+  {
+    "nl_query": "What are the total sales by region?",
+    "sql": "SELECT c.region, SUM(o.total_amount) AS total_sales FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.region ORDER BY total_sales DESC"
+  },
+  {
+    "nl_query": "Show orders placed in the last 30 days",
+    "sql": "SELECT order_id, customer_id, order_date, status, total_amount FROM orders WHERE order_date >= DATEADD(day, -30, GETUTCDATE())"
+  },
+  {
+    "nl_query": "Which customers have never placed an order?",
+    "sql": "SELECT c.customer_id, c.first_name, c.last_name, c.email FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id WHERE o.order_id IS NULL"
+  },
+  {
+    "nl_query": "What is the average order value by customer segment?",
+    "sql": "SELECT c.segment, AVG(o.total_amount) AS avg_order_value FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.segment"
+  },
+  {
+    "nl_query": "Top 5 customers by total spend",
+    "sql": "SELECT TOP 5 c.first_name, c.last_name, SUM(o.total_amount) AS total_spend FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.first_name, c.last_name ORDER BY total_spend DESC"
+  },
+  {
+    "nl_query": "Show all pending orders with customer names",
+    "sql": "SELECT o.order_id, c.first_name, c.last_name, o.order_date, o.total_amount FROM orders o JOIN customers c ON o.customer_id = c.customer_id WHERE o.status = 'pending'"
+  },
+  {
+    "nl_query": "What is the total revenue per product category?",
+    "sql": "SELECT p.category, SUM(oi.line_total) AS total_revenue FROM products p JOIN order_items oi ON p.product_id = oi.product_id GROUP BY p.category ORDER BY total_revenue DESC"
+  },
+  {
+    "nl_query": "How many orders were placed through each channel?",
+    "sql": "SELECT channel, COUNT(*) AS order_count FROM orders GROUP BY channel ORDER BY order_count DESC"
+  },
+  {
+    "nl_query": "Show the campaign with the highest budget",
+    "sql": "SELECT TOP 1 campaign_id, name, channel, budget FROM campaigns ORDER BY budget DESC"
+  },
+  {
+    "nl_query": "What is the ROI for each campaign?",
+    "sql": "SELECT ca.name, ca.budget, ca.spend, COUNT(cc.conversion_id) AS conversions, CASE WHEN ca.budget > 0 THEN ROUND((ca.spend - ca.budget) / ca.budget * 100, 2) ELSE 0 END AS roi_pct FROM campaigns ca LEFT JOIN campaign_conversions cc ON ca.campaign_id = cc.campaign_id GROUP BY ca.name, ca.budget, ca.spend"
+  },
+  {
+    "nl_query": "List all high-priority support tickets that are still open",
+    "sql": "SELECT ticket_id, customer_id, category, priority, created_at FROM support_tickets WHERE priority = 'high' AND status = 'open' ORDER BY created_at ASC"
+  },
+  {
+    "nl_query": "What is the average resolution time for support tickets?",
+    "sql": "SELECT AVG(DATEDIFF(hour, created_at, resolved_at)) AS avg_resolution_hours FROM support_tickets WHERE resolved_at IS NOT NULL"
+  },
+  {
+    "nl_query": "Show monthly order counts for the current year",
+    "sql": "SELECT MONTH(order_date) AS order_month, COUNT(*) AS order_count FROM orders WHERE YEAR(order_date) = YEAR(GETUTCDATE()) GROUP BY MONTH(order_date) ORDER BY order_month"
+  },
+  {
+    "nl_query": "Which products have never been ordered?",
+    "sql": "SELECT p.product_id, p.name, p.category, p.list_price FROM products p LEFT JOIN order_items oi ON p.product_id = oi.product_id WHERE oi.item_id IS NULL"
+  },
+  {
+    "nl_query": "Show the top 3 best-selling products by quantity",
+    "sql": "SELECT TOP 3 p.name, p.category, SUM(oi.quantity) AS total_quantity_sold FROM products p JOIN order_items oi ON p.product_id = oi.product_id GROUP BY p.name, p.category ORDER BY total_quantity_sold DESC"
+  },
+  {
+    "nl_query": "How many customers are in each segment?",
+    "sql": "SELECT segment, COUNT(*) AS customer_count FROM customers GROUP BY segment ORDER BY customer_count DESC"
+  },
+  {
+    "nl_query": "Show total discount given per order channel for orders over $100",
+    "sql": "SELECT channel, SUM(discount) AS total_discount, COUNT(*) AS order_count FROM orders WHERE total_amount > 100 GROUP BY channel ORDER BY total_discount DESC"
+  }
+]

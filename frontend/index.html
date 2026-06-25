@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLP-to-SQL Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header" role="banner">
+            <h1>NLP-to-SQL Assistant</h1>
+            <p class="subtitle">Ask questions about your data in plain English</p>
+            <button class="settings-toggle" id="settingsToggle" aria-label="Open settings" title="Settings">⚙️</button>
+        </header>
+
+        <!-- Settings Panel (for testing/dev) -->
+        <div class="settings-panel" id="settingsPanel" hidden>
+            <h2>Connection Settings</h2>
+            <div class="settings-field">
+                <label for="apiUrlInput">API Base URL</label>
+                <input type="text" id="apiUrlInput" value="http://localhost:8000/api/v1" placeholder="http://localhost:8000/api/v1">
+            </div>
+            <div class="settings-field">
+                <label for="authTokenInput">Auth Token</label>
+                <input type="text" id="authTokenInput" value="dev-token" placeholder="Bearer token for authentication">
+            </div>
+            <div class="settings-actions">
+                <button id="saveSettingsBtn" class="save-settings-btn">Save & Connect</button>
+                <span id="connectionStatus" class="connection-status"></span>
+            </div>
+        </div>
+
+        <main class="chat-container" role="main" aria-label="Query interface">
+            <!-- Chat Messages Area -->
+            <div class="messages-area" id="messagesArea" role="log" aria-live="polite" aria-label="Query results">
+                <div class="welcome-message">
+                    <p>Welcome! Type a question about your data below. For example:</p>
+                    <ul>
+                        <li>"Show me all customers who placed orders last month"</li>
+                        <li>"What are the top 10 products by revenue?"</li>
+                        <li>"How many open support tickets are there by priority?"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading-indicator" id="loadingIndicator" role="status" aria-live="assertive" hidden>
+                <div class="spinner" aria-hidden="true"></div>
+                <span>Generating SQL and fetching results…</span>
+            </div>
+
+            <!-- Input Area -->
+            <form class="input-area" id="queryForm" role="search" aria-label="Query input">
+                <label for="queryInput" class="sr-only">Enter your question</label>
+                <input
+                    type="text"
+                    id="queryInput"
+                    class="query-input"
+                    placeholder="Ask a question about your data…"
+                    autocomplete="off"
+                    maxlength="2000"
+                    aria-describedby="inputHint"
+                    required
+                >
+                <span id="inputHint" class="sr-only">Press Enter or click Send to submit your query</span>
+                <button type="submit" class="send-btn" id="sendBtn" aria-label="Send query">
+                    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13"></path>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                    </svg>
+                    <span class="btn-text">Send</span>
+                </button>
+            </form>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

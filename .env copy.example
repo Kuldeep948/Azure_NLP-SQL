@@ -1,0 +1,64 @@
+# =============================================================================
+# NLP-to-SQL Azure Harness - Environment Variables
+# =============================================================================
+# Copy this file to .env and fill in your values.
+# All Azure service authentication uses ManagedIdentity (DefaultAzureCredential)
+# in production. These values are for local development.
+# =============================================================================
+
+# --- Azure OpenAI ---
+AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
+AZURE_OPENAI_API_KEY=<your-api-key>
+AZURE_OPENAI_PRIMARY_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_FALLBACK_DEPLOYMENT=gpt-4-turbo
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-ada-002
+AZURE_OPENAI_API_VERSION=2024-02-01
+
+# --- Azure AI Search (Vector Store) ---
+AZURE_SEARCH_ENDPOINT=https://<your-search-service>.search.windows.net
+AZURE_SEARCH_API_KEY=<your-search-api-key>
+AZURE_SEARCH_CACHE_INDEX=semantic-cache-index
+AZURE_SEARCH_FEWSHOT_INDEX=few-shot-index
+
+# --- Azure SQL Database ---
+SQL_CONNECTION_STRING=Driver={ODBC Driver 18 for SQL Server};Server=<server>.database.windows.net;Database=<db>;Authentication=ActiveDirectoryDefault;
+
+# --- Azure Blob Storage ---
+AZURE_BLOB_STORAGE_URL=https://<your-storage>.blob.core.windows.net
+AZURE_BLOB_PROMPTS_CONTAINER=prompts
+AZURE_BLOB_SCHEMA_CONTAINER=schema
+AZURE_BLOB_EVALUATION_CONTAINER=evaluation
+AZURE_BLOB_FEEDBACK_CONTAINER=feedback
+
+# --- Azure Cache for Redis ---
+REDIS_CONNECTION_STRING=<your-redis-host>:6380,password=<your-password>,ssl=True,abortConnect=False
+
+# --- Azure Key Vault ---
+AZURE_KEY_VAULT_URL=https://<your-keyvault>.vault.azure.net/
+
+# --- Azure AI Language (CLU) ---
+AZURE_CLU_ENDPOINT=https://<your-language-resource>.cognitiveservices.azure.com/
+AZURE_CLU_API_KEY=<your-clu-api-key>
+AZURE_CLU_PROJECT_NAME=nlp-to-sql-intents
+AZURE_CLU_DEPLOYMENT_NAME=production
+
+# --- Azure Application Insights ---
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=<key>;IngestionEndpoint=https://<region>.in.applicationinsights.azure.com/
+
+# --- Application Configuration ---
+ROW_CAP=1000
+QUERY_TIMEOUT_SECONDS=30
+CACHE_TTL_SECONDS=3600
+CACHE_SIMILARITY_THRESHOLD=0.92
+EVALUATION_ACCURACY_THRESHOLD=0.80
+MAX_RETRIES=3
+INITIAL_BACKOFF_SECONDS=1.0
+
+# --- Authentication ---
+AUTH_ISSUER=https://login.microsoftonline.com/<tenant-id>/v2.0
+AUTH_AUDIENCE=api://<your-app-client-id>
+
+# --- Server ---
+HOST=0.0.0.0
+PORT=8000
+LOG_LEVEL=info

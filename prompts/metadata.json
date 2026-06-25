@@ -1,0 +1,18 @@
+{
+  "templates": [
+    {
+      "version": "v1",
+      "blob_name": "system_prompt_v1.txt",
+      "is_latest": true,
+      "created_at": "2024-01-15T10:00:00Z",
+      "description": "Standard direct SQL generation prompt"
+    },
+    {
+      "version": "v2",
+      "blob_name": "system_prompt_v2.txt",
+      "is_latest": false,
+      "created_at": "2024-03-01T10:00:00Z",
+      "description": "Chain-of-thought reasoning prompt for A/B testing"
+    }
+  ]
+}

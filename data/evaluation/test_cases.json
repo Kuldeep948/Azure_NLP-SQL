@@ -1,0 +1,206 @@
+[
+  {
+    "nl_query": "How many customers do we have?",
+    "expected_sql": "SELECT COUNT(*) AS customer_count FROM customers",
+    "tier": "simple",
+    "description": "Basic COUNT(*) on customers table"
+  },
+  {
+    "nl_query": "Show all products",
+    "expected_sql": "SELECT * FROM products",
+    "tier": "simple",
+    "description": "SELECT all rows from products table"
+  },
+  {
+    "nl_query": "How many orders are there in total?",
+    "expected_sql": "SELECT COUNT(*) AS order_count FROM orders",
+    "tier": "simple",
+    "description": "Basic COUNT(*) on orders table"
+  },
+  {
+    "nl_query": "List all campaigns",
+    "expected_sql": "SELECT * FROM campaigns",
+    "tier": "simple",
+    "description": "SELECT all rows from campaigns table"
+  },
+  {
+    "nl_query": "How many support tickets exist?",
+    "expected_sql": "SELECT COUNT(*) AS ticket_count FROM support_tickets",
+    "tier": "simple",
+    "description": "Basic COUNT(*) on support_tickets table"
+  },
+  {
+    "nl_query": "Show all product categories",
+    "expected_sql": "SELECT DISTINCT category FROM products",
+    "tier": "simple",
+    "description": "DISTINCT values from a single column"
+  },
+  {
+    "nl_query": "What are the different order statuses?",
+    "expected_sql": "SELECT DISTINCT status FROM orders",
+    "tier": "simple",
+    "description": "DISTINCT values for order status"
+  },
+  {
+    "nl_query": "How many products do we sell?",
+    "expected_sql": "SELECT COUNT(*) AS product_count FROM products",
+    "tier": "simple",
+    "description": "Basic COUNT(*) on products table"
+  },
+  {
+    "nl_query": "Show customers in the Enterprise segment",
+    "expected_sql": "SELECT * FROM customers WHERE segment = 'Enterprise'",
+    "tier": "filtered",
+    "description": "Simple WHERE clause with equality filter"
+  },
+  {
+    "nl_query": "What was our total revenue last quarter?",
+    "expected_sql": "SELECT SUM(total_amount) AS total_revenue FROM orders WHERE order_date >= DATEADD(QUARTER, -1, DATEADD(QUARTER, DATEDIFF(QUARTER, 0, GETUTCDATE()), 0)) AND order_date < DATEADD(QUARTER, DATEDIFF(QUARTER, 0, GETUTCDATE()), 0)",
+    "tier": "filtered",
+    "description": "SUM aggregation with date range filter for last quarter"
+  },
+  {
+    "nl_query": "How many orders were placed in 2024?",
+    "expected_sql": "SELECT COUNT(*) AS order_count FROM orders WHERE order_date >= '2024-01-01' AND order_date < '2025-01-01'",
+    "tier": "filtered",
+    "description": "COUNT with date range filter for specific year"
+  },
+  {
+    "nl_query": "Show high priority support tickets that are still open",
+    "expected_sql": "SELECT * FROM support_tickets WHERE priority = 'high' AND status = 'open'",
+    "tier": "filtered",
+    "description": "Multiple WHERE conditions with AND"
+  },
+  {
+    "nl_query": "What is the average order value by channel?",
+    "expected_sql": "SELECT channel, AVG(total_amount) AS avg_order_value FROM orders GROUP BY channel",
+    "tier": "filtered",
+    "description": "AVG aggregation with GROUP BY"
+  },
+  {
+    "nl_query": "How many customers are in each region?",
+    "expected_sql": "SELECT region, COUNT(*) AS customer_count FROM customers GROUP BY region",
+    "tier": "filtered",
+    "description": "COUNT with GROUP BY on region"
+  },
+  {
+    "nl_query": "Show campaigns with a budget over 50000",
+    "expected_sql": "SELECT * FROM campaigns WHERE budget > 50000",
+    "tier": "filtered",
+    "description": "WHERE clause with numeric comparison"
+  },
+  {
+    "nl_query": "What are the total sales by order status?",
+    "expected_sql": "SELECT status, SUM(total_amount) AS total_sales FROM orders GROUP BY status",
+    "tier": "filtered",
+    "description": "SUM aggregation grouped by status"
+  },
+  {
+    "nl_query": "List products priced above 100 dollars",
+    "expected_sql": "SELECT * FROM products WHERE list_price > 100",
+    "tier": "filtered",
+    "description": "WHERE clause with price filter"
+  },
+  {
+    "nl_query": "Show top 10 customers by total spend",
+    "expected_sql": "SELECT TOP 10 c.id, c.name, SUM(o.total_amount) AS total_spend FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.id, c.name ORDER BY total_spend DESC",
+    "tier": "join",
+    "description": "JOIN with GROUP BY and ORDER BY using TOP"
+  },
+  {
+    "nl_query": "Which products have been ordered more than 100 times?",
+    "expected_sql": "SELECT p.id, p.name, SUM(oi.quantity) AS total_ordered FROM products p JOIN order_items oi ON p.id = oi.product_id GROUP BY p.id, p.name HAVING SUM(oi.quantity) > 100",
+    "tier": "join",
+    "description": "JOIN with GROUP BY and HAVING clause"
+  },
+  {
+    "nl_query": "Show the total revenue per campaign",
+    "expected_sql": "SELECT c.id, c.name, SUM(o.total_amount) AS campaign_revenue FROM campaigns c JOIN campaign_conversions cc ON c.id = cc.campaign_id JOIN orders o ON cc.order_id = o.id GROUP BY c.id, c.name",
+    "tier": "join",
+    "description": "Multi-table JOIN across campaigns, conversions, and orders"
+  },
+  {
+    "nl_query": "List customers who have open support tickets",
+    "expected_sql": "SELECT DISTINCT c.id, c.name, c.email FROM customers c JOIN support_tickets st ON c.id = st.customer_id WHERE st.status = 'open'",
+    "tier": "join",
+    "description": "JOIN with WHERE filter and DISTINCT"
+  },
+  {
+    "nl_query": "What is the average order value per customer segment?",
+    "expected_sql": "SELECT c.segment, AVG(o.total_amount) AS avg_order_value FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.segment",
+    "tier": "join",
+    "description": "JOIN with GROUP BY on customer segment"
+  },
+  {
+    "nl_query": "Show the most popular product categories by number of orders",
+    "expected_sql": "SELECT p.category, COUNT(DISTINCT oi.order_id) AS order_count FROM products p JOIN order_items oi ON p.id = oi.product_id GROUP BY p.category ORDER BY order_count DESC",
+    "tier": "join",
+    "description": "JOIN with COUNT DISTINCT and ORDER BY"
+  },
+  {
+    "nl_query": "Which customers have never placed an order?",
+    "expected_sql": "SELECT c.id, c.name, c.email FROM customers c LEFT JOIN orders o ON c.id = o.customer_id WHERE o.id IS NULL",
+    "tier": "join",
+    "description": "LEFT JOIN to find non-matching rows"
+  },
+  {
+    "nl_query": "Show customers who placed orders but also filed support tickets",
+    "expected_sql": "SELECT DISTINCT c.id, c.name FROM customers c JOIN orders o ON c.id = o.customer_id JOIN support_tickets st ON c.id = st.customer_id",
+    "tier": "join",
+    "description": "Multiple JOINs to find customers in both tables"
+  },
+  {
+    "nl_query": "What is the month-over-month revenue growth?",
+    "expected_sql": "WITH monthly_revenue AS (SELECT FORMAT(order_date, 'yyyy-MM') AS month, SUM(total_amount) AS revenue FROM orders GROUP BY FORMAT(order_date, 'yyyy-MM')) SELECT month, revenue, LAG(revenue) OVER (ORDER BY month) AS prev_month_revenue, CASE WHEN LAG(revenue) OVER (ORDER BY month) IS NOT NULL THEN ((revenue - LAG(revenue) OVER (ORDER BY month)) / LAG(revenue) OVER (ORDER BY month)) * 100 ELSE NULL END AS growth_pct FROM monthly_revenue ORDER BY month",
+    "tier": "advanced",
+    "description": "CTE with LAG window function for month-over-month calculation"
+  },
+  {
+    "nl_query": "Rank customers by their total spend within each segment",
+    "expected_sql": "SELECT c.name, c.segment, SUM(o.total_amount) AS total_spend, RANK() OVER (PARTITION BY c.segment ORDER BY SUM(o.total_amount) DESC) AS spend_rank FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.name, c.segment",
+    "tier": "advanced",
+    "description": "Window function RANK with PARTITION BY"
+  },
+  {
+    "nl_query": "What is the running total of revenue by day?",
+    "expected_sql": "SELECT CAST(order_date AS DATE) AS order_day, SUM(total_amount) AS daily_revenue, SUM(SUM(total_amount)) OVER (ORDER BY CAST(order_date AS DATE)) AS running_total FROM orders GROUP BY CAST(order_date AS DATE) ORDER BY order_day",
+    "tier": "advanced",
+    "description": "Running total using SUM window function"
+  },
+  {
+    "nl_query": "Show the campaign ROI calculated as revenue divided by spend",
+    "expected_sql": "WITH campaign_revenue AS (SELECT c.id, c.name, c.spend, SUM(o.total_amount) AS total_revenue FROM campaigns c JOIN campaign_conversions cc ON c.id = cc.campaign_id JOIN orders o ON cc.order_id = o.id GROUP BY c.id, c.name, c.spend) SELECT id, name, spend, total_revenue, CASE WHEN spend > 0 THEN (total_revenue - spend) / spend ELSE NULL END AS roi FROM campaign_revenue ORDER BY roi DESC",
+    "tier": "advanced",
+    "description": "CTE with multi-table JOIN and calculated ROI metric"
+  },
+  {
+    "nl_query": "What is the median resolution time for support tickets by category?",
+    "expected_sql": "SELECT category, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATEDIFF(HOUR, created_at, resolved_at)) OVER (PARTITION BY category) AS median_resolution_hours FROM support_tickets WHERE resolved_at IS NOT NULL",
+    "tier": "advanced",
+    "description": "PERCENTILE_CONT window function for median calculation"
+  },
+  {
+    "nl_query": "Show the top 3 products per category by revenue",
+    "expected_sql": "WITH product_revenue AS (SELECT p.id, p.name, p.category, SUM(oi.line_total) AS total_revenue, ROW_NUMBER() OVER (PARTITION BY p.category ORDER BY SUM(oi.line_total) DESC) AS rn FROM products p JOIN order_items oi ON p.id = oi.product_id GROUP BY p.id, p.name, p.category) SELECT id, name, category, total_revenue FROM product_revenue WHERE rn <= 3 ORDER BY category, total_revenue DESC",
+    "tier": "advanced",
+    "description": "CTE with ROW_NUMBER window function for top-N per group"
+  },
+  {
+    "nl_query": "Calculate customer lifetime value as total spend divided by months since first order",
+    "expected_sql": "WITH customer_metrics AS (SELECT c.id, c.name, SUM(o.total_amount) AS total_spend, MIN(o.order_date) AS first_order, DATEDIFF(MONTH, MIN(o.order_date), GETUTCDATE()) AS months_active FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.id, c.name) SELECT id, name, total_spend, months_active, CASE WHEN months_active > 0 THEN total_spend / months_active ELSE total_spend END AS monthly_clv FROM customer_metrics ORDER BY monthly_clv DESC",
+    "tier": "advanced",
+    "description": "CTE with DATEDIFF and conditional division for CLV"
+  },
+  {
+    "nl_query": "Compare this quarter's revenue to the same quarter last year",
+    "expected_sql": "WITH quarterly AS (SELECT YEAR(order_date) AS yr, DATEPART(QUARTER, order_date) AS qtr, SUM(total_amount) AS revenue FROM orders GROUP BY YEAR(order_date), DATEPART(QUARTER, order_date)) SELECT q1.yr, q1.qtr, q1.revenue AS current_revenue, q2.revenue AS prior_year_revenue, CASE WHEN q2.revenue > 0 THEN ((q1.revenue - q2.revenue) / q2.revenue) * 100 ELSE NULL END AS yoy_growth_pct FROM quarterly q1 LEFT JOIN quarterly q2 ON q1.qtr = q2.qtr AND q1.yr = q2.yr + 1 ORDER BY q1.yr DESC, q1.qtr DESC",
+    "tier": "advanced",
+    "description": "Self-join on CTE for year-over-year quarterly comparison"
+  },
+  {
+    "nl_query": "What is the conversion rate for each campaign?",
+    "expected_sql": "WITH campaign_stats AS (SELECT c.id, c.name, COUNT(DISTINCT cc.customer_id) AS converted_customers FROM campaigns c LEFT JOIN campaign_conversions cc ON c.id = cc.campaign_id GROUP BY c.id, c.name) SELECT id, name, converted_customers FROM campaign_stats ORDER BY converted_customers DESC",
+    "tier": "advanced",
+    "description": "CTE with LEFT JOIN and COUNT DISTINCT for conversion metrics"
+  }
+]
