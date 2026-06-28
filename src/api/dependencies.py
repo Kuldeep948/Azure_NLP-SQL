@@ -11,7 +11,13 @@ dependencies in testing or partial deployments.
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
+
+from dotenv import load_dotenv
+
+# Ensure .env is loaded before any config access
+load_dotenv()
 
 from src.nlp_to_sql.config import get_config
 
@@ -35,25 +41,71 @@ _credential: Any = None
 
 
 def _get_credential() -> Any:
-    """Get or create the shared DefaultAzureCredential."""
+    """Get or create the shared credential for Azure services.
+    
+    For local development without Azure CLI, falls back to API key auth.
+    In production with Managed Identity, uses DefaultAzureCredential.
+    """
     global _credential
     if _credential is None:
-        from azure.identity.aio import DefaultAzureCredential
-        _credential = DefaultAzureCredential()
+        import os
+        # Check if we're in local dev (no Managed Identity endpoint)
+        if os.environ.get("IDENTITY_ENDPOINT") is None:
+            # Local dev: return None, individual clients will use API keys
+            _credential = None
+        else:
+            from azure.identity.aio import DefaultAzureCredential
+            _credential = DefaultAzureCredential()
     return _credential
 
 
 def _get_blob_client() -> Any:
-    """Get or create the shared async BlobServiceClient."""
+    """Get or create the shared async BlobServiceClient.
+    
+    Uses connection string for local dev, or Managed Identity in production.
+    """
     global _blob_client
     if _blob_client is None:
-        from azure.storage.blob.aio import BlobServiceClient
+        import os
         config = get_config()
-        _blob_client = BlobServiceClient(
-            account_url=config.azure_blob_storage_url,
-            credential=_get_credential(),
-        )
+        
+        # Try connection string first (local dev)
+        conn_str = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+        if conn_str:
+            try:
+                from azure.storage.blob.aio import BlobServiceClient
+                _blob_client = BlobServiceClient.from_connection_string(conn_str)
+                return _blob_client
+            except Exception as exc:
+                logger.warning("Blob client from connection string failed: %s", exc)
+        
+        blob_url = config.azure_blob_storage_url
+        
+        # Skip blob client if URL is a placeholder
+        if 'localhost' in blob_url or not blob_url.startswith('https://'):
+            _blob_client = _LocalBlobStub()
+            return _blob_client
+            
+        try:
+            from azure.storage.blob.aio import BlobServiceClient
+            credential = _get_credential()
+            if credential is not None:
+                _blob_client = BlobServiceClient(
+                    account_url=blob_url,
+                    credential=credential,
+                )
+            else:
+                _blob_client = _LocalBlobStub()
+        except Exception as exc:
+            logger.warning("Blob client creation failed, using local stub: %s", exc)
+            _blob_client = _LocalBlobStub()
     return _blob_client
+
+
+class _LocalBlobStub:
+    """Stub blob client that triggers local file fallback in SchemaManager and PromptManager."""
+    def get_container_client(self, name: str):
+        raise ConnectionError(f"No Blob Storage configured — using local file fallback for '{name}'")
 
 
 def get_schema_manager() -> Any:
@@ -111,18 +163,29 @@ def get_prompt_manager() -> Any:
     """
     global _prompt_manager
     if _prompt_manager is None:
-        from azure.search.documents.aio import SearchClient
         from src.harness.prompt_manager import PromptManager
 
         config = get_config()
-        credential = _get_credential()
 
         # Create the vector store client for few-shot index
-        vector_store = SearchClient(
-            endpoint=config.azure_search_endpoint,
-            index_name=config.azure_search_fewshot_index,
-            credential=credential,
-        )
+        vector_store = None
+        try:
+            from azure.search.documents.aio import SearchClient
+            from azure.core.credentials import AzureKeyCredential
+
+            credential = _get_credential()
+            if credential is None and config.azure_search_api_key:
+                # Local dev: use API key
+                credential = AzureKeyCredential(config.azure_search_api_key)
+            
+            if credential is not None:
+                vector_store = SearchClient(
+                    endpoint=config.azure_search_endpoint,
+                    index_name=config.azure_search_fewshot_index,
+                    credential=credential,
+                )
+        except Exception as exc:
+            logger.warning("Vector store client creation failed: %s", exc)
 
         # Create the embedding client
         embedding_client = _create_embedding_client(config)

@@ -145,15 +145,72 @@ async def lifespan(app: FastAPI):
         schema_mgr = get_schema_manager()
         await schema_mgr.load()
         logger.info("Schema metadata loaded.")
+    except Exception as exc:
+        logger.warning("Schema manager startup via Blob Storage failed: %s. Loading from local file.", exc)
+        # Fallback: load from local file
+        try:
+            from src.schema.metadata import SchemaMetadata
+            import json
+            from pathlib import Path
+            local_schema_path = Path(__file__).resolve().parent.parent.parent / "data" / "schema_metadata.json"
+            if local_schema_path.exists():
+                data = json.loads(local_schema_path.read_text(encoding="utf-8"))
+                schema_mgr._metadata = SchemaMetadata.model_validate(data)
+                logger.info("Schema metadata loaded from local file: %s", local_schema_path)
+            else:
+                logger.error("No schema metadata available (Blob Storage unavailable and no local file)")
+        except Exception as local_exc:
+            logger.error("Failed to load local schema: %s", local_exc)
 
+    prompt_mgr = None
+    try:
         # Load prompt templates (required)
         prompt_mgr = get_prompt_manager()
         await prompt_mgr.load_templates()
         logger.info("Prompt templates loaded.")
-
     except Exception as exc:
-        logger.error("Startup failed: %s", exc)
-        raise
+        logger.warning("Prompt manager startup via Blob Storage failed: %s. Loading from local file.", exc)
+        # Fallback: load templates from local prompts/ directory
+        try:
+            from src.nlp_to_sql.models import PromptTemplate
+            from pathlib import Path
+            from datetime import datetime, timezone
+            import json, re
+
+            # Ensure we have a prompt_mgr instance
+            try:
+                prompt_mgr = get_prompt_manager()
+            except Exception:
+                pass  # Already got it or can't get it
+
+            prompts_dir = Path(__file__).resolve().parent.parent.parent / "prompts"
+            metadata_path = prompts_dir / "metadata.json"
+            if metadata_path.exists() and prompt_mgr is not None:
+                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                for entry in metadata.get("templates", []):
+                    version = entry.get("version", "v1")
+                    blob_name = entry.get("blob_name", "")
+                    is_latest = entry.get("is_latest", False)
+                    template_path = prompts_dir / blob_name
+                    if template_path.exists():
+                        content = template_path.read_text(encoding="utf-8")
+                        placeholders = list(set(re.findall(r"\{\{(\w+)\}\}", content)))
+                        template = PromptTemplate(
+                            id=f"template-{version}",
+                            version=version,
+                            content=content,
+                            placeholders=placeholders,
+                            is_latest=is_latest,
+                            created_at=entry.get("created_at", datetime.now(timezone.utc).isoformat()),
+                        )
+                        prompt_mgr._templates[version] = template
+                        if is_latest:
+                            prompt_mgr._latest_version = version
+                logger.info("Prompt templates loaded from local files (%d templates)", len(prompt_mgr._templates))
+            else:
+                logger.error("No prompt metadata found locally")
+        except Exception as local_exc:
+            logger.error("Failed to load local templates: %s", local_exc)
 
     logger.info("NLP-to-SQL Azure Harness API started successfully.")
     yield

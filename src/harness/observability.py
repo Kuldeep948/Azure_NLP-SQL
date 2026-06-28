@@ -135,7 +135,7 @@ class ObservabilityLayer:
         self,
         event_type: str,
         trace_id: str,
-        span_id: str,
+        span_id: str = "",
         **kwargs: Any,
     ) -> None:
         """Emit a structured JSON log event with PII redaction.
